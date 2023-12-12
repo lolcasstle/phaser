@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phaser Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
+</head>
+
+<body>
+    <button id="start-button">Start Game</button>
+
+    <script>
+        const gameConfig = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 300 },
+                    debug: false
+                }
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+
+        let phaserGame;
+
+        function startGame() {
+            if (!phaserGame) {
+                phaserGame = new Phaser.Game(gameConfig);
+            }
+        }
+
+        function preload() {
+            this.load.spritesheet('player', 'dance_rat.png', { frameWidth: 32, frameHeight: 48 });
+            this.load.image('rock', 'assets/rock.png');
+        }
+
+        function create() {
+            this.anims.create({
+                key: 'jump',
+                frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
+                frameRate: 10,
+                repeat: -1
+            });
+
+            this.players = this.physics.add.group();
+            this.rocks = this.physics.add.group();
+
+            this.staticPlayer = this.players.create(400, 300, 'player');
+            this.staticPlayer.setCollideWorldBounds(true);
+
+            this.input.keyboard.on('keydown', function (event) {
+                const speed = 200;
+                switch (event.key) {
+                    case 'ArrowUp':
+                        this.staticPlayer.setVelocityY(-speed);
+                        break;
+                    case 'ArrowDown':
+                        this.staticPlayer.setVelocityY(speed);
+                        break;
+                    case 'ArrowLeft':
+                        this.staticPlayer.setVelocityX(-speed);
+                        break;
+                    case 'ArrowRight':
+                        this.staticPlayer.setVelocityX(speed);
+                        break;
+                }
+            }, this);
+
+            this.input.keyboard.on('keyup', function () {
+                this.staticPlayer.setVelocity(0);
+            }, this);
+
+            this.physics.add.collider(this.staticPlayer, this.rocks, gameOver, null, this);
+
+            this.time.addEvent({ delay: 1000, callback: spawnRock, callbackScope: this, loop: true });
+        }
+
+        function update() {
+            this.rocks.children.iterate(function (rock) {
+                rock.setVelocityX(200);
+            });
+        }
+
+        function spawnRock() {
+            const y = Phaser.Math.Between(0, 600);
+            const rock = this.rocks.create(0, y, 'rock');
+            rock.setGravityX(200);
+            rock.setTint(Phaser.Display.Color.RandomRGB().color);
+        }
+
+        function gameOver() {
+            this.physics.pause();
+            alert('Game Over!');
+        }
+
+        document.getElementById('start-button').addEventListener('click', startGame);
+    </script>
+</body>
+
+
+
+
+
+
+
+
+
